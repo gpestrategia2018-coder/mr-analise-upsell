@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análise de Upsell — Premonições 1F · Mundo Revalida</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════
+   TOKENS — MUNDO REVALIDA
+══════════════════════════════════════ */
+:root {
+  --roxo:      #4A4999;
+  --roxo-hi:   #7170cc;
+  --amarelo:   #FCBE11;
+  --bg:        #0C0E15;
+  --card:      #14172a;
+  --card2:     #1a1e33;
+  --text:      #F8F9FD;
+  --muted:     rgba(248,249,253,0.42);
+  --subtle:    rgba(248,249,253,0.18);
+  --border:    rgba(74,73,153,0.18);
+  --border-md: rgba(74,73,153,0.35);
+  --border-hi: rgba(74,73,153,0.6);
+  --hl:        54px;
+  --bd:        16px;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+html,body{ height:100%; overflow:hidden; }
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── SCROLL CONTAINER ── */
+#app{
+  height:100vh;
+  overflow-y:scroll;
+  scroll-snap-type:y mandatory;
+  scroll-behavior:smooth;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+#app::-webkit-scrollbar{display:none}
+
+/* ── FIXED BG ── */
+.bg-zigzag{
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20'%3E%3Cpolyline points='0,20 10,0 20,20 30,0 40,20' fill='none' stroke='%234A4999' stroke-width='1.4' stroke-opacity='0.1'/%3E%3C/svg%3E");
+  background-size:40px 20px;
+  pointer-events:none;z-index:0;
+}
+.bg-beam{
+  position:fixed;top:0;left:50%;transform:translateX(-50%);
+  width:1px;height:65vh;
+  background:linear-gradient(to bottom,rgba(74,73,153,.65),transparent);
+  pointer-events:none;z-index:0;
+}
+.bg-orb-top{
+  position:fixed;top:-80px;left:50%;transform:translateX(-50%);
+  width:900px;height:500px;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(74,73,153,.2) 0%,transparent 65%);
+  pointer-events:none;z-index:0;
+}
+.bg-orb-gold{
+  position:fixed;bottom:8%;right:6%;
+  width:480px;height:480px;border-radius:50%;
+  background:radial-gradient(circle,rgba(252,190,17,.08) 0%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
+.bg-orb-left{
+  position:fixed;top:35%;left:4%;
+  width:340px;height:340px;border-radius:50%;
+  background:radial-gradient(circle,rgba(74,73,153,.09) 0%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
+
+/* ── SECTIONS ── */
+.sec{
+  scroll-snap-align:start;
+  scroll-snap-stop:always;
+  height:100vh;
+  position:relative;
+  z-index:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:0 88px;
+  overflow:hidden;
+}
+.sec-wide{ padding:0 72px; }
+
+/* ── FIXED HUD ── */
+#vnav{
+  position:fixed;right:22px;top:50%;
+  transform:translateY(-50%);
+  display:flex;flex-direction:column;
+  gap:9px;z-index:500;
+  align-items:center;
+}
+.vdot{
+  width:5px;height:5px;border-radius:50%;
+  background:rgba(74,73,153,.32);
+  cursor:pointer;
+  transition:all .35s cubic-bezier(.4,0,.2,1);
+}
+.vdot.active{
+  background:var(--amarelo);
+  height:22px;border-radius:3px;
+  box-shadow:0 0 10px rgba(252,190,17,.55);
+}
+.vdot:hover:not(.active){background:rgba(74,73,153,.65);}
+
+#sec-counter{
+  position:fixed;top:24px;right:50px;
+  font-size:11px;font-weight:700;
+  color:var(--muted);letter-spacing:.14em;
+  z-index:500;
+}
+#sec-counter em{font-style:normal;color:var(--amarelo);font-size:13px;}
+
+#prog{
+  position:fixed;top:0;left:0;right:0;height:2px;z-index:500;
+  background:linear-gradient(90deg,var(--roxo),var(--amarelo));
+  transform-origin:left;transform:scaleX(0);
+  transition:transform .4s ease;
+  box-shadow:0 0 12px rgba(252,190,17,.35);
+}
+
+#scroll-hint{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  z-index:500;display:flex;flex-direction:column;
+  align-items:center;gap:5px;
+  font-size:9px;letter-spacing:.15em;
+  color:var(--muted);text-transform:uppercase;font-weight:700;
+  animation:floatY 2.2s ease-in-out infinite;
+  cursor:pointer;
+  transition:opacity .3s;
+}
+@keyframes floatY{
+  0%,100%{transform:translateX(-50%) translateY(0);}
+  50%{transform:translateX(-50%) translateY(7px);}
+}
+.hint-arr{font-size:18px;color:var(--roxo-hi);}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(36px);filter:blur(6px);}
+  to{opacity:1;transform:translateY(0);filter:blur(0);}
+}
+@keyframes fadeLeft{
+  from{opacity:0;transform:translateX(-28px);}
+  to{opacity:1;transform:translateX(0);}
+}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes scaleIn{
+  from{opacity:0;transform:scale(.88);filter:blur(5px);}
+  to{opacity:1;transform:scale(1);filter:blur(0);}
+}
+@keyframes gradPan{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+@keyframes ecgDraw{
+  from{stroke-dashoffset:800;}
+  to{stroke-dashoffset:0;}
+}
+@keyframes pulseRing{
+  0%{transform:scale(1);opacity:.6;}
+  100%{transform:scale(2.2);opacity:0;}
+}
+@keyframes barGrow{
+  from{width:0;}
+  to{width:var(--w);}
+}
+
+.anim{opacity:0;}
+.anim.in{animation:fadeUp .7s cubic-bezier(.22,1,.36,1) forwards;}
+.anim.in-left{animation:fadeLeft .65s cubic-bezier(.22,1,.36,1) forwards;}
+.anim.in-scale{animation:scaleIn .65s cubic-bezier(.22,1,.36,1) forwards;}
+.anim.in-fade{animation:fadeIn .8s ease forwards;}
+
+.d1{animation-delay:.04s}.d2{animation-delay:.12s}.d3{animation-delay:.2s}
+.d4{animation-delay:.28s}.d5{animation-delay:.36s}.d6{animation-delay:.44s}
+.d7{animation-delay:.52s}.d8{animation-delay:.6s}.d9{animation-delay:.68s}
+
+/* ── SHARED COMPONENTS ── */
+
+/* Tag */
+.tag{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:9.5px;font-weight:800;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--roxo-hi);
+  margin-bottom:10px;
+}
+.tag::before{
+  content:'';display:block;
+  width:20px;height:1px;
+  background:var(--roxo-hi);opacity:.7;
+}
+.tag.gold{color:var(--amarelo);}
+.tag.gold::before{background:var(--amarelo);}
+
+/* Headings */
+.h1{
+  font-family:'Syne',sans-serif;
+  font-size:var(--hl);font-weight:800;
+  letter-spacing:-.035em;line-height:1.02;
+}
+.h2{
+  font-family:'Syne',sans-serif;
+  font-size:calc(var(--hl)*.58);font-weight:800;
+  letter-spacing:-.028em;line-height:1.1;
+}
+
+/* Gradient text */
+.gt{
+  background:linear-gradient(120deg,var(--text) 0%,#9b9ae0 38%,var(--amarelo) 68%,var(--text) 100%);
+  background-size:220% auto;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:gradPan 7s linear infinite;
+}
+.pt{color:var(--roxo-hi);}
+.yt{color:var(--amarelo);}
+
+/* Section bar */
+.sbar{
+  width:32px;height:2px;
+  background:linear-gradient(90deg,var(--roxo),var(--amarelo));
+  border-radius:2px;margin:12px 0 20px;
+  opacity:0;animation:fadeIn .4s .15s forwards;
+}
+
+/* Card */
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:28px;
+  position:relative;overflow:hidden;
+  transition:transform .3s,border-color .3s,box-shadow .3s;
+}
+.card:hover{
+  transform:translateY(-5px) scale(1.015);
+  border-color:var(--border-md);
+  box-shadow:0 20px 55px rgba(74,73,153,.18);
+}
+.card::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;
+  background:radial-gradient(500px circle at var(--mx,50%) var(--my,50%),rgba(74,73,153,.12),transparent 40%);
+  opacity:0;transition:opacity .4s;pointer-events:none;z-index:0;
+}
+.card:hover::before{opacity:1;}
+.card>*{position:relative;z-index:1;}
+.card-top-roxo{border-top:2px solid rgba(74,73,153,.65);}
+.card-top-gold{border-top:2px solid rgba(252,190,17,.6);}
+.card-top-green{border-top:2px solid rgba(34,197,94,.55);}
+
+/* KPI Big */
+.kpi-big{
+  font-family:'Syne',sans-serif;
+  font-size:48px;font-weight:800;
+  letter-spacing:-.04em;line-height:1;
+}
+.kpi-label{
+  font-size:11px;color:var(--muted);
+  font-weight:600;margin-top:6px;letter-spacing:.02em;
+}
+.kpi-sub{font-size:10px;color:var(--roxo-hi);margin-top:3px;font-weight:700;}
+
+/* Pill */
+.pill{
+  display:inline-flex;align-items:center;
+  padding:3px 10px;border-radius:99px;
+  font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+}
+.pill-roxo{background:rgba(74,73,153,.18);color:#a8a7e8;border:1px solid rgba(74,73,153,.32);}
+.pill-gold{background:rgba(252,190,17,.12);color:var(--amarelo);border:1px solid rgba(252,190,17,.25);}
+.pill-green{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.22);}
+.pill-red{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.22);}
+
+/* Divider */
+.divider{
+  height:1px;background:var(--border);
+  margin:16px 0;border:none;
+}
+
+/* ══════════════════════════════════════
+   SLIDE 1 — CAPA
+══════════════════════════════════════ */
+#s1{
+  align-items:flex-start;
+  padding-top:0;
+}
+#s1 .eyebrow{
+  display:flex;align-items:center;gap:12px;
+  font-size:9px;font-weight:800;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--roxo-hi);
+  margin-bottom:22px;
+}
+#s1 .eyebrow-line{width:40px;height:1px;background:var(--roxo-hi);opacity:.6;}
+#s1 .title{
+  font-family:'Syne',sans-serif;
+  font-size:72px;font-weight:800;
+  letter-spacing:-.04em;line-height:.98;
+  color:var(--text);
+  max-width:740px;
+}
+#s1 .tagline{
+  font-size:17px;color:var(--muted);
+  max-width:500px;line-height:1.6;
+  margin-top:18px;margin-bottom:36px;
+}
+#s1 .meta-row{
+  display:flex;align-items:center;gap:24px;flex-wrap:wrap;
+}
+.meta-chip{
+  display:flex;align-items:center;gap:8px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:99px;padding:8px 16px;
+  font-size:11px;font-weight:700;color:var(--muted);
+}
+.meta-chip .dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--amarelo);
+  box-shadow:0 0 8px rgba(252,190,17,.6);
+  animation:status-blink 2s ease-in-out infinite;
+}
+@keyframes status-blink{
+  0%,100%{opacity:1;}50%{opacity:.35;}
+}
+#s1 .big-stat{
+  position:absolute;right:88px;top:50%;transform:translateY(-50%);
+  text-align:right;
+}
+#s1 .big-stat .bs-num{
+  font-family:'Syne',sans-serif;
+  font-size:140px;font-weight:800;
+  letter-spacing:-.06em;line-height:1;
+  color:rgba(74,73,153,.14);
+  pointer-events:none;
+}
+#s1 .ecg-wrap{
+  position:absolute;bottom:60px;left:88px;right:88px;
+  opacity:.5;
+  animation:fadeIn 1.2s 1s forwards;opacity:0;
+}
+
+/* ══════════════════════════════════════
+   SLIDE 2 — VISÃO GERAL
+══════════════════════════════════════ */
+#s2 .kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+  width:100%;
+  margin-top:8px;
+}
+#s2 .kpi-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:28px 24px;
+  text-align:center;
+  position:relative;overflow:hidden;
+}
+
+/* ══════════════════════════════════════
+   SLIDE 3 — A ESTRATÉGIA
+══════════════════════════════════════ */
+#s3 .strategy-layout{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:28px;
+  width:100%;
+  margin-top:6px;
+}
+#s3 .flow{
+  display:flex;
+  flex-direction:column;
+  gap:0;
+}
+.flow-step{
+  display:flex;align-items:flex-start;gap:16px;
+  padding:22px 0;
+  border-bottom:1px solid var(--border);
+}
+.flow-step:last-child{border-bottom:none;}
+.step-num{
+  width:36px;height:36px;border-radius:10px;
+  background:rgba(74,73,153,.18);border:1px solid rgba(74,73,153,.32);
+  color:#a8a7e8;font-size:15px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.step-body{}
+.step-title{font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;}
+.step-desc{font-size:13px;color:var(--muted);line-height:1.6;}
+.step-val{
+  font-family:'Syne',sans-serif;
+  font-size:26px;font-weight:800;
+  color:var(--amarelo);
+  margin-top:4px;
+}
+
+#s3 .insight-col{
+  display:flex;flex-direction:column;gap:14px;
+}
+.insight-box{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:20px 22px;
+}
+.ib-label{font-size:9px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--roxo-hi);margin-bottom:6px;}
+.ib-text{font-size:14px;color:var(--text);line-height:1.55;}
+.ib-text strong{color:var(--amarelo);}
+
+/* ══════════════════════════════════════
+   SLIDE 4 — FUNIL
+══════════════════════════════════════ */
+#s4 .funil-wrap{
+  display:grid;
+  grid-template-columns:1fr 1.1fr;
+  gap:52px;
+  width:100%;
+  margin-top:6px;
+  align-items:center;
+}
+#s4 .funil-visual{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+.funil-block{
+  border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  height:68px;
+  font-size:13px;font-weight:800;letter-spacing:.04em;
+  position:relative;
+  transition:all .2s;
+}
+.funil-block.f1{
+  width:100%;
+  background:rgba(74,73,153,.22);
+  border:1px solid rgba(74,73,153,.4);
+  color:#a8a7e8;
+}
+.funil-block.f2{
+  width:80%;
+  background:rgba(74,73,153,.14);
+  border:1px solid rgba(74,73,153,.25);
+  color:#a8a7e8;
+}
+.funil-block.f3{
+  width:58%;
+  background:rgba(252,190,17,.18);
+  border:1px solid rgba(252,190,17,.4);
+  color:var(--amarelo);
+}
+.funil-conn{
+  width:1px;height:14px;
+  background:linear-gradient(to bottom,rgba(74,73,153,.5),rgba(74,73,153,.2));
+}
+.funil-block.f3 .funil-conn{background:rgba(252,190,17,.3);}
+.funil-label{
+  position:absolute;right:-128px;
+  font-size:10px;font-weight:700;
+  padding:3px 10px;border-radius:99px;
+  white-space:nowrap;
+}
+.funil-block.f1 .funil-label{color:#a8a7e8;background:rgba(74,73,153,.15);border:1px solid rgba(74,73,153,.25);}
+.funil-block.f2 .funil-label{color:#f87171;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);}
+.funil-block.f3 .funil-label{color:var(--amarelo);background:rgba(252,190,17,.1);border:1px solid rgba(252,190,17,.22);}
+
+#s4 .roi-stack{
+  display:flex;flex-direction:column;gap:14px;
+}
+.roi-item{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:18px 22px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.ri-label{font-size:13px;color:var(--muted);font-weight:500;}
+.ri-val{
+  font-family:'Syne',sans-serif;
+  font-size:22px;font-weight:800;
+  color:#a8a7e8;letter-spacing:-.02em;
+}
+.roi-item.hi{
+  border-color:rgba(252,190,17,.3);
+  background:linear-gradient(135deg,rgba(252,190,17,.06),var(--card));
+}
+.roi-item.hi .ri-val{color:var(--amarelo);}
+.roi-item.hi .ri-label{color:rgba(248,249,253,.7);}
+
+/* ══════════════════════════════════════
+   SLIDE 5 — PRODUTOS
+══════════════════════════════════════ */
+#s5 .prod-layout{
+  display:grid;
+  grid-template-columns:1.4fr 1fr;
+  gap:36px;
+  width:100%;
+  margin-top:6px;
+  align-items:start;
+}
+#s5 .prod-list{
+  display:flex;flex-direction:column;gap:10px;
+}
+.prod-row{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 18px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  transition:border-color .2s,transform .2s;
+  cursor:default;
+}
+.prod-row:hover{border-color:var(--border-md);transform:translateX(4px);}
+.pr-rank{
+  font-family:'Syne',sans-serif;
+  font-size:18px;font-weight:800;
+  color:rgba(74,73,153,.35);
+  width:28px;flex-shrink:0;text-align:right;
+}
+.pr-rank.gold-rank{color:rgba(252,190,17,.5);}
+.pr-bar-wrap{flex:1;}
+.pr-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.pr-bar-bg{
+  height:4px;background:rgba(74,73,153,.15);
+  border-radius:2px;overflow:hidden;
+}
+.pr-bar{
+  height:100%;border-radius:2px;
+  background:linear-gradient(90deg,var(--roxo),var(--roxo-hi));
+  width:0;transition:width 1.2s cubic-bezier(.4,0,.2,1);
+}
+.pr-bar.gold{background:linear-gradient(90deg,rgba(252,190,17,.7),var(--amarelo));}
+.pr-cnt{
+  font-family:'Syne',sans-serif;
+  font-size:20px;font-weight:800;
+  color:#a8a7e8;letter-spacing:-.02em;
+  flex-shrink:0;width:36px;text-align:right;
+}
+.pr-cnt.gold-cnt{color:var(--amarelo);}
+
+#s5 .prod-summary{
+  display:flex;flex-direction:column;gap:14px;
+}
+
+/* ══════════════════════════════════════
+   SLIDE 6 — TOP CLIENTES
+══════════════════════════════════════ */
+#s6 .clientes-layout{
+  display:grid;
+  grid-template-columns:1.3fr 1fr;
+  gap:32px;
+  width:100%;
+  margin-top:6px;
+  align-items:start;
+}
+#s6 .cliente-list{
+  display:flex;flex-direction:column;gap:8px;
+}
+.cliente-row{
+  display:flex;align-items:center;gap:14px;
+  padding:12px 16px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;
+  transition:all .25s;
+}
+.cliente-row:hover{border-color:var(--border-md);background:rgba(74,73,153,.07);}
+.cr-rank{
+  font-family:'Syne',sans-serif;
+  font-size:15px;font-weight:800;color:rgba(74,73,153,.38);
+  width:22px;flex-shrink:0;
+}
+.cr-info{flex:1;}
+.cr-name{font-size:13px;font-weight:700;color:var(--text);}
+.cr-product{font-size:11px;color:var(--muted);margin-top:1px;}
+.cr-val{
+  font-family:'Syne',sans-serif;
+  font-size:17px;font-weight:800;
+  color:var(--amarelo);letter-spacing:-.02em;
+  flex-shrink:0;
+}
+.cr-val.hi{color:#4ade80;}
+
+#s6 .cliente-stats{
+  display:flex;flex-direction:column;gap:14px;
+}
+
+/* ══════════════════════════════════════
+   SLIDE 7 — POTENCIAL
+══════════════════════════════════════ */
+#s7 .pot-layout{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:32px;
+  width:100%;
+  margin-top:6px;
+}
+.pot-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:32px;
+  position:relative;overflow:hidden;
+}
+.pot-card::after{
+  content:'';position:absolute;
+  top:-60px;right:-60px;
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(252,190,17,.06),transparent 70%);
+  pointer-events:none;
+}
+.pc-big{
+  font-family:'Syne',sans-serif;
+  font-size:84px;font-weight:800;
+  letter-spacing:-.05em;line-height:.9;
+  margin-bottom:12px;
+}
+.pc-label{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:18px;}
+.pc-action{
+  display:flex;flex-direction:column;gap:8px;
+}
+.pa-item{
+  display:flex;align-items:center;gap:10px;
+  font-size:12px;font-weight:600;color:var(--muted);
+}
+.pa-item::before{
+  content:'→';
+  color:var(--amarelo);font-weight:800;
+  font-size:14px;flex-shrink:0;
+}
+
+.pot-card.dark-hi{
+  border-color:rgba(252,190,17,.22);
+  background:linear-gradient(140deg,rgba(252,190,17,.05),var(--card) 60%);
+}
+
+/* ══════════════════════════════════════
+   SLIDE 8 — CONCLUSÃO
+══════════════════════════════════════ */
+#s8{align-items:flex-start;}
+#s8 .concl-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  width:100%;
+  margin-top:8px;
+}
+.concl-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:26px 22px;
+}
+.concl-num{
+  font-family:'Syne',sans-serif;
+  font-size:42px;font-weight:800;
+  color:rgba(74,73,153,.18);
+  line-height:1;margin-bottom:12px;
+}
+.concl-icon{font-size:26px;margin-bottom:10px;}
+.concl-title{font-size:15px;font-weight:800;color:var(--text);margin-bottom:7px;}
+.concl-body{font-size:12px;color:var(--muted);line-height:1.65;}
+.concl-card.gold-hi{
+  border-top:2px solid rgba(252,190,17,.55);
+  border-color:rgba(252,190,17,.2);
+}
+.concl-card.roxo-hi{border-top:2px solid rgba(74,73,153,.65);}
+.concl-card.green-hi{border-top:2px solid rgba(34,197,94,.5);}
+
+#s8 .final-line{
+  margin-top:28px;width:100%;
+  background:rgba(252,190,17,.07);
+  border:1px solid rgba(252,190,17,.22);
+  border-radius:14px;padding:16px 24px;
+  display:flex;align-items:center;gap:14px;
+  font-size:14px;color:rgba(252,190,17,.9);font-weight:600;
+  line-height:1.5;
+}
+.fl-icon{font-size:20px;flex-shrink:0;}
+
+/* ── EDIT BANNER ── */
+#edit-banner{
+  position:fixed;top:0;left:0;right:0;
+  background:var(--amarelo);color:var(--bg);
+  text-align:center;padding:7px;
+  font-size:11px;font-weight:800;
+  z-index:9999;display:none;
+  letter-spacing:.08em;text-transform:uppercase;
+}
+body.edit-on #edit-banner{display:block;}
+body.edit-on{padding-top:34px;}
+body.edit-on [contenteditable="true"]{
+  outline:1px dashed rgba(252,190,17,.45);border-radius:3px;
+  cursor:text;min-width:16px;padding:1px 4px;
+}
+body.edit-on [contenteditable="true"]:hover{
+  outline:1.5px dashed var(--amarelo);
+  background:rgba(252,190,17,.05);
+}
+body.edit-on [contenteditable="true"]:focus{
+  outline:2px solid var(--amarelo);
+  background:rgba(252,190,17,.07);
+}
+
+/* ── EDITOR PANEL ── */
+#editor{
+  position:fixed;bottom:52px;right:18px;
+  background:rgba(20,23,42,.97);
+  border:1px solid var(--border-md);
+  border-radius:18px;padding:20px;width:252px;
+  z-index:200;backdrop-filter:blur(20px);
+  box-shadow:0 24px 60px rgba(0,0,0,.65);
+  transform:translateY(16px) scale(.96);
+  opacity:0;pointer-events:none;
+  transition:all .35s cubic-bezier(.34,1.56,.64,1);
+}
+#editor.open{transform:translateY(0) scale(1);opacity:1;pointer-events:all;}
+#editor-btn{
+  position:fixed;bottom:52px;right:18px;
+  background:rgba(20,23,42,.85);
+  border:1px solid var(--border-md);
+  color:var(--muted);border-radius:12px;
+  padding:8px 16px;font-size:12px;font-weight:600;
+  cursor:pointer;z-index:201;
+  transition:all .2s;font-family:'Inter',sans-serif;letter-spacing:.04em;
+  backdrop-filter:blur(8px);
+}
+#editor-btn:hover{border-color:var(--border-hi);color:var(--text);}
+#editor.open~#editor-btn{display:none;}
+.ep-head{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:10px;font-weight:800;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--amarelo);margin-bottom:16px;
+}
+.ep-x{cursor:pointer;background:none;border:none;color:var(--muted);font-size:15px;font-family:inherit;}
+.ep-row{margin-bottom:12px;}
+.ep-lbl{font-size:10px;font-weight:600;color:var(--muted);margin-bottom:5px;letter-spacing:.07em;text-transform:uppercase;}
+.ep-row input[type="color"]{width:100%;height:32px;border:1px solid var(--border-md);border-radius:8px;background:transparent;cursor:pointer;padding:2px;}
+.ep-step{display:flex;align-items:center;gap:8px;}
+.ep-step button{
+  width:30px;height:30px;
+  background:rgba(74,73,153,.15);border:1px solid rgba(74,73,153,.3);
+  color:#a8a7e8;border-radius:8px;font-size:16px;font-weight:700;
+  cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.ep-step button:hover{background:var(--roxo);color:var(--text);}
+.ep-step span{flex:1;text-align:center;font-size:13px;font-weight:700;color:var(--text);background:rgba(255,255,255,.05);border-radius:6px;padding:5px;}
+.ep-btn{width:100%;padding:9px;border-radius:10px;border:none;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:4px;letter-spacing:.04em;}
+.ep-btn.ed-btn{background:rgba(74,73,153,.15);border:1px solid rgba(74,73,153,.3);color:#a8a7e8;}
+.ep-btn.ed-btn.on{background:var(--roxo);color:var(--text);}
+.ep-btn.ex-btn{background:rgba(252,190,17,.1);border:1px solid rgba(252,190,17,.2);color:var(--amarelo);margin-top:8px;}
+.ep-btn.ex-btn:hover{background:rgba(252,190,17,.18);}
+</style>
+</head>
+<body>
+
+<div id="edit-banner">✏️ MODO DE EDIÇÃO — Clique em qualquer texto para editar</div>
+
+<!-- BG LAYERS -->
+<div class="bg-zigzag"></div>
+<div class="bg-beam"></div>
+<div class="bg-orb-top"></div>
+<div class="bg-orb-gold"></div>
+<div class="bg-orb-left"></div>
+
+<!-- HUD -->
+<div id="prog"></div>
+<div id="sec-counter"><em id="cur">01</em> / 08</div>
+<div id="vnav"></div>
+
+<div id="scroll-hint" onclick="scrollTo(1)">
+  <span class="hint-arr">↓</span>
+  <span>scroll</span>
+</div>
+
+<!-- ════════════════════════════════════
+     APP
+════════════════════════════════════ -->
+<div id="app">
+
+  <!-- ─── S1 CAPA ─── -->
+  <section class="sec" id="s1">
+    <div class="eyebrow anim d1">
+      <span class="eyebrow-line"></span>
+      Mundo Revalida · Análise Estratégica · 2026
+    </div>
+
+    <div class="title anim d2">
+      Upsell<br><span class="gt">Premonições</span><br>1ª Fase
+    </div>
+
+    <p class="tagline anim d3">
+      Quem investiu pouco primeiro, voltou gastando muito mais — e os números confirmam a estratégia.
+    </p>
+
+    <div class="meta-row anim d4">
+      <div class="meta-chip">
+        <span class="dot"></span>
+        <span>Set 2025 — Mai 2026</span>
+      </div>
+      <div class="meta-chip">421 compradores analisados</div>
+      <div class="meta-chip">Base Hubla completa</div>
+    </div>
+
+    <div class="big-stat">
+      <div class="bs-num anim in-fade d6">12%</div>
+    </div>
+
+    <div class="ecg-wrap anim in-fade d9">
+      <svg viewBox="0 0 900 48" preserveAspectRatio="none" height="36" width="100%">
+        <path d="M0,30 L120,30 L150,8 L170,46 L195,14 L215,30 L320,30 L360,30 L390,5 L415,46 L440,18 L460,30 L560,30 L590,30 L620,8 L645,46 L665,18 L685,30 L900,30"
+          fill="none" stroke="#4A4999" stroke-width="1.5"
+          stroke-dasharray="800" stroke-dashoffset="800"
+          style="animation:ecgDraw 2.5s 1.2s ease-out forwards;"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ─── S2 VISÃO GERAL ─── -->
+  <section class="sec sec-wide" id="s2">
+    <div class="anim d1"><div class="tag">Visão Geral</div></div>
+    <div class="h2 anim d2">Os números da estratégia</div>
+    <div class="sbar"></div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card card card-top-roxo anim in-scale d3">
+        <div class="kpi-label">Compradores Premonições 1F</div>
+        <div class="kpi-big pt" data-count="421" data-suffix="">0</div>
+        <div class="kpi-sub">pagamentos confirmados</div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);">Base de análise completa — Set/2025 a Mai/2026</div>
+      </div>
+      <div class="kpi-card card card-top-gold anim in-scale d4">
+        <div class="kpi-label">Fizeram Upsell</div>
+        <div class="kpi-big yt" data-count="53" data-suffix="">0</div>
+        <div class="kpi-sub">clientes convertidos</div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);">Compraram ao menos 1 produto adicional</div>
+      </div>
+      <div class="kpi-card card card-top-roxo anim in-scale d5">
+        <div class="kpi-label">Taxa de Upsell</div>
+        <div class="kpi-big pt">12,6%</div>
+        <div class="kpi-sub">de conversão da base</div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);">1 em cada 8 clientes evoluiu para produto maior</div>
+      </div>
+      <div class="kpi-card card card-top-gold anim in-scale d6">
+        <div class="kpi-label">Receita Gerada via Upsell</div>
+        <div class="kpi-big yt" style="font-size:36px;" data-count="239833" data-prefix="R$" data-format="money">R$0</div>
+        <div class="kpi-sub">gerado pela estratégia</div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);">Ticket médio de upsell: R$ 4.525,00</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── S3 A ESTRATÉGIA ─── -->
+  <section class="sec" id="s3">
+    <div class="anim d1"><div class="tag gold">A Estratégia</div></div>
+    <div class="h2 anim d2">Porta de entrada → Upgrade</div>
+    <div class="sbar"></div>
+
+    <div class="strategy-layout">
+      <div class="flow">
+        <div class="flow-step anim d3">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Investimento inicial baixo</div>
+            <div class="step-desc">O cliente entra pelo Premonições Premium 1F — produto de alto valor percebido e ticket acessível, entre R$290 e R$450.</div>
+            <div class="step-val">~R$ 330</div>
+          </div>
+        </div>
+        <div class="flow-step anim d4">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Prova de qualidade</div>
+            <div class="step-desc">O método entrega resultado real na 1ª fase. Isso cria confiança e o cliente passa a enxergar o MR como parceiro para a jornada completa.</div>
+          </div>
+        </div>
+        <div class="flow-step anim d5">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Upgrade natural para 2ª fase</div>
+            <div class="step-desc">Com aprovação na 1F garantida, o cliente migra para produtos de 2ª fase — Practicus Premium, Combo Presencial — sem atrito.</div>
+            <div class="step-val">~R$ 4.525</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-col">
+        <div class="insight-box card card-top-gold anim d3">
+          <div class="ib-label">ROI Médio por Cliente</div>
+          <div style="font-family:'Syne',sans-serif;font-size:52px;font-weight:800;color:var(--amarelo);line-height:1;">14×</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">o upsell gerou 14x o valor do investimento no Premonições 1F</div>
+        </div>
+        <div class="insight-box card anim d4">
+          <div class="ib-label">Maior Upsell Individual</div>
+          <div class="ib-text"><strong>R$ 10.000</strong> — Mara de Souza Penha entrou com R$ 297 e acumulou R$ 10.000 em compras subsequentes.</div>
+        </div>
+        <div class="insight-box card anim d5">
+          <div class="ib-label">Velocidade de Conversão</div>
+          <div class="ib-text">A maioria dos upsells aconteceu em <strong>menos de 30 dias</strong> após a compra do Premonições — quando a motivação estava no pico.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── S4 FUNIL ─── -->
+  <section class="sec" id="s4">
+    <div class="anim d1"><div class="tag">Funil de Conversão</div></div>
+    <div class="h2 anim d2">Da entrada ao upgrade</div>
+    <div class="sbar"></div>
+
+    <div class="funil-wrap">
+      <div class="funil-visual anim d3">
+        <div class="funil-block f1">
+          421 COMPRADORES 1F
+          <span class="funil-label">100% — base total</span>
+        </div>
+        <div class="funil-conn"></div>
+        <div class="funil-block f2">
+          368 SEM UPSELL
+          <span class="funil-label">⚡ potencial inexplorado</span>
+        </div>
+        <div class="funil-conn"></div>
+        <div class="funil-block f3">
+          53 COM UPSELL ✓
+          <span class="funil-label">12,6% convertidos</span>
+        </div>
+      </div>
+
+      <div class="roi-stack">
+        <div class="roi-item anim d3">
+          <span class="ri-label">Investimento médio no 1F</span>
+          <span class="ri-val">R$ 330</span>
+        </div>
+        <div class="roi-item anim d4">
+          <span class="ri-label">Ticket médio do upsell</span>
+          <span class="ri-val">R$ 4.525</span>
+        </div>
+        <div class="roi-item hi anim d5">
+          <span class="ri-label">ROI médio por cliente</span>
+          <span class="ri-val">14×</span>
+        </div>
+        <div class="roi-item hi anim d6">
+          <span class="ri-label">Total gerado pelos 53 clientes</span>
+          <span class="ri-val">R$ 239.833</span>
+        </div>
+        <div class="roi-item anim d7" style="border-color:rgba(34,197,94,.25);">
+          <span class="ri-label" style="color:rgba(248,249,253,.7);">Potencial se converter mais 10%</span>
+          <span class="ri-val" style="color:#4ade80;">+R$ 166k</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── S5 PRODUTOS ─── -->
+  <section class="sec sec-wide" id="s5">
+    <div class="anim d1"><div class="tag">Produtos do Upsell</div></div>
+    <div class="h2 anim d2">Para onde os clientes migraram</div>
+    <div class="sbar"></div>
+
+    <div class="prod-layout">
+      <div class="prod-list">
+        <!-- barra máxima = 17 (combo) -->
+        <div class="prod-row anim d2">
+          <div class="pr-rank gold-rank">#1</div>
+          <div class="pr-bar-wrap">
+            <div class="pr-name">Combo Practicus Premium + Presencial</div>
+            <div class="pr-bar-bg"><div class="pr-bar gold" style="--w:100%"></div></div>
+          </div>
+          <div class="pr-cnt gold-cnt">17×</div>
+        </div>
+        <div class="prod-row anim d3">
+          <div class="pr-rank gold-rank">#2</div>
+          <div class="pr-bar-wrap">
+            <div class="pr-name">Practicus Premium — Oferta Aniversário</div>
+            <div class="pr-bar-bg"><div class="pr-bar gold" style="--w:82%"></div></div>
+          </div>
+          <div class="pr-cnt gold-cnt">14×</div>
+        </div>
+        <div class="prod-row anim d4">
+          <div class="pr-rank">#3</div>
+          <div class="pr-bar-wrap">
+            <div class="pr-name">Medtask Treinamento (Recorrente)</div>
+            <div class="pr-bar-bg"><div class="pr-bar" style="--w:70%"></div></div>
+          </div>
+          <div class="pr-cnt">12×</div>
+        </div>
+        <div class="prod-row anim d5">
+          <div class="pr-rank">#4</div>
+          <div class="pr-bar-wrap">
+            <div class="pr-name">Practicus Presencial 2025.2</div>
+            <div class="pr-bar-bg"><div class="pr-bar" style="--w:41%"></div></div>
+          </div>
+          <div class="pr-cnt">7×</div>
+        </div>
+        <div class="prod-row anim d6">
+          <div class="pr-rank">#5</div>
+          <div class="pr-bar-wrap">
+            <div class="pr-name">Premonições Practicus Premium 2F</div>
+            <div class="pr-bar-bg"><div class="pr-bar" style="--w:41%"></div></div>
+          </div>
+          <div class="pr-cnt">7×</div>
+        </div>
+        <div class="prod-row anim d7">
+          <div class="pr-rank">#6</div>
+          <div class="pr-bar-wrap">
+            <div class="pr-name">Extensivo Premium 2026.1</div>
+            <div class="pr-bar-bg"><div class="pr-bar" style="--w:29%"></div></div>
+          </div>
+          <div class="pr-cnt">5×</div>
+        </div>
+        <div class="prod-row anim d8">
+          <div class="pr-rank">#7</div>
+          <div class="pr-bar-wrap">
+            <div class="pr-name">TBT Practicus Premium / outros</div>
+            <div class="pr-bar-bg"><div class="pr-bar" style="--w:23%"></div></div>
+          </div>
+          <div class="pr-cnt">4×</div>
+        </div>
+      </div>
+
+      <div class="prod-summary">
+        <div class="card card-top-gold anim d2">
+          <div style="font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Insight Principal</div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);line-height:1.55;">O <span class="yt">Combo Practicus</span> é destino #1 — representa o salto de R$330 para R$7.800–R$9.300 em 1 compra.</div>
+        </div>
+        <div class="card anim d3">
+          <div style="font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Recorrência</div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);line-height:1.55;">Medtask Recorrente aparece 12× — clientes ativos mês a mês após a compra inicial.</div>
+        </div>
+        <div class="card anim d4" style="border-color:rgba(252,190,17,.2);">
+          <div style="font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Produtos únicos</div>
+          <div style="font-family:'Syne',sans-serif;font-size:42px;font-weight:800;color:var(--amarelo);line-height:1;">20</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">produtos diferentes foram adquiridos por quem veio do Premonições 1F</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── S6 TOP CLIENTES ─── -->
+  <section class="sec sec-wide" id="s6">
+    <div class="anim d1"><div class="tag gold">Top Clientes</div></div>
+    <div class="h2 anim d2">Quem mais evoluiu na jornada</div>
+    <div class="sbar"></div>
+
+    <div class="clientes-layout">
+      <div class="cliente-list">
+        <div class="cliente-row anim d2">
+          <div class="cr-rank">#1</div>
+          <div class="cr-info"><div class="cr-name">Mara de Souza Penha</div><div class="cr-product">Combo Practicus + Presencial + Imersão</div></div>
+          <div class="cr-val hi">R$10k</div>
+        </div>
+        <div class="cliente-row anim d3">
+          <div class="cr-rank">#2</div>
+          <div class="cr-info"><div class="cr-name">Clara Beatriz Gonçalves</div><div class="cr-product">Combo Practicus Premium e Presencial</div></div>
+          <div class="cr-val">R$9.706</div>
+        </div>
+        <div class="cliente-row anim d4">
+          <div class="cr-rank">#3</div>
+          <div class="cr-info"><div class="cr-name">Isadora Aguilera</div><div class="cr-product">Combo Practicus Premium e Presencial</div></div>
+          <div class="cr-val">R$9.347</div>
+        </div>
+        <div class="cliente-row anim d5">
+          <div class="cr-rank">#4</div>
+          <div class="cr-info"><div class="cr-name">Griela Tirse Jimenez</div><div class="cr-product">Practicus Premium Aniversário + Presencial</div></div>
+          <div class="cr-val">R$9.154</div>
+        </div>
+        <div class="cliente-row anim d6">
+          <div class="cr-rank">#5</div>
+          <div class="cr-info"><div class="cr-name">Ailson Cavalcante Amorim</div><div class="cr-product">Combo Practicus Premium e Presencial</div></div>
+          <div class="cr-val">R$8.867</div>
+        </div>
+        <div class="cliente-row anim d7">
+          <div class="cr-rank">#6</div>
+          <div class="cr-info"><div class="cr-name">Camila Faria do Vale Gonçalves</div><div class="cr-product">Combo Practicus + Presencial</div></div>
+          <div class="cr-val">R$8.500</div>
+        </div>
+        <div class="cliente-row anim d8">
+          <div class="cr-rank">#7</div>
+          <div class="cr-info"><div class="cr-name">Fabiely Lima Pereira Ribeiro</div><div class="cr-product">Combo Practicus Premium e Presencial</div></div>
+          <div class="cr-val">R$7.800</div>
+        </div>
+        <div class="cliente-row anim d9">
+          <div class="cr-rank">#8</div>
+          <div class="cr-info"><div class="cr-name">Livia Zavao Zanetti</div><div class="cr-product">Combo Practicus Premium e Presencial</div></div>
+          <div class="cr-val">R$7.500</div>
+        </div>
+      </div>
+
+      <div class="cliente-stats">
+        <div class="card card-top-gold anim d2" style="text-align:center;">
+          <div class="kpi-label">Top 10 clientes geraram</div>
+          <div style="font-family:'Syne',sans-serif;font-size:44px;font-weight:800;color:var(--amarelo);line-height:1;margin:8px 0;">R$84k</div>
+          <div style="font-size:12px;color:var(--muted);">35% do total de upsell</div>
+        </div>
+        <div class="card anim d3">
+          <div style="font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Padrão observado</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.6;">A maioria entrou com <span class="yt">R$297–R$355</span> e fechou o Combo Practicus em menos de 30 dias. A confiança gerada pela 1F foi o gatilho.</div>
+        </div>
+        <div class="card anim d4" style="border-color:rgba(74,73,153,.35);">
+          <div style="font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Ticket médio Top 10</div>
+          <div style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:#a8a7e8;line-height:1;">R$ 8.410</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">vs R$4.525 da média geral</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── S7 POTENCIAL ─── -->
+  <section class="sec" id="s7">
+    <div class="anim d1"><div class="tag gold">Oportunidade</div></div>
+    <div class="h2 anim d2">368 clientes ainda não convertidos</div>
+    <div class="sbar"></div>
+
+    <div class="pot-layout">
+      <div class="pot-card anim d3" style="border-top:2px solid rgba(74,73,153,.65);">
+        <div class="pc-big pt">368</div>
+        <div class="pc-label">clientes que compraram o Premonições 1F e ainda <strong style="color:var(--text)">não fizeram nenhum upgrade</strong>. São leads quentes com intenção de compra já demonstrada.</div>
+        <div class="pc-action">
+          <div class="pa-item">Segmentar por data de compra (priorizar recentes)</div>
+          <div class="pa-item">Fluxo de reativação via WhatsApp + email</div>
+          <div class="pa-item">Oferta com desconto exclusivo "família Premonições"</div>
+          <div class="pa-item">Prova social: depoimentos de quem já fez a jornada completa</div>
+        </div>
+      </div>
+
+      <div class="pot-card dark-hi anim d4">
+        <div class="kpi-label" style="margin-bottom:10px;">Se converter mais 10% da base</div>
+        <div style="font-family:'Syne',sans-serif;font-size:52px;font-weight:800;color:var(--amarelo);line-height:1;margin-bottom:8px;">+R$166k</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:24px;">37 novos clientes × R$4.525 ticket médio = receita adicional sem novos leads, apenas reativando base existente.</div>
+
+        <div style="border-top:1px solid var(--border);padding-top:18px;">
+          <div class="kpi-label" style="margin-bottom:10px;">Se converter mais 20% da base</div>
+          <div style="font-family:'Syne',sans-serif;font-size:40px;font-weight:800;color:#a8a7e8;line-height:1;">+R$333k</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">custo de aquisição: R$0 — base já conquistada</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── S8 CONCLUSÃO ─── -->
+  <section class="sec sec-wide" id="s8">
+    <div class="anim d1"><div class="tag gold">Conclusão</div></div>
+    <div class="h2 anim d2">A estratégia funcionou. Agora é escalar.</div>
+    <div class="sbar"></div>
+
+    <div class="concl-grid">
+      <div class="concl-card roxo-hi anim in-scale d3">
+        <div class="concl-num">01</div>
+        <div class="concl-icon">🧲</div>
+        <div class="concl-title">Porta de entrada validada</div>
+        <div class="concl-body">O Premonições 1F funciona como isca de alta qualidade. Com 12,6% de conversão para upsell em uma base pequena, o modelo está provado. Escalar a captação via Premonições aumenta diretamente o pipeline de upsell.</div>
+      </div>
+      <div class="concl-card gold-hi anim in-scale d4">
+        <div class="concl-num">02</div>
+        <div class="concl-icon">💰</div>
+        <div class="concl-title">ROI de 14× por cliente</div>
+        <div class="concl-body">Cada real investido em adquirir um cliente para o Premonições 1F tem potencial de retornar 14× via upsell. Isso justifica investir mais em tráfego pago específico para este produto como front-end do funil.</div>
+      </div>
+      <div class="concl-card green-hi anim in-scale d5">
+        <div class="concl-num">03</div>
+        <div class="concl-icon">📋</div>
+        <div class="concl-title">368 clientes prontos para reativar</div>
+        <div class="concl-body">A maior oportunidade imediata não é novos leads — é a base existente. Uma campanha de reativação bem feita pode gerar +R$166k a R$333k sem nenhum custo de aquisição adicional.</div>
+      </div>
+    </div>
+
+    <div class="final-line anim d7">
+      <div class="fl-icon">⚡</div>
+      <div>
+        <strong>Próximo passo recomendado:</strong> Criar uma sequência de reativação para os 368 clientes sem upsell, segmentando por data de compra e apresentando o Practicus Premium como evolução natural da jornada iniciada com o Premonições.
+      </div>
+    </div>
+  </section>
+
+</div><!-- #app -->
+
+<!-- EDITOR -->
+<button id="editor-btn" onclick="toggleEd()">⚙ Editor</button>
+<div id="editor">
+  <div class="ep-head">Editor Visual <button class="ep-x" onclick="toggleEd()">✕</button></div>
+  <div class="ep-row">
+    <div class="ep-lbl">Cor Primária (Roxo)</div>
+    <input type="color" value="#4A4999" oninput="setV('--roxo',this.value)">
+  </div>
+  <div class="ep-row">
+    <div class="ep-lbl">Destaque (Amarelo)</div>
+    <input type="color" value="#FCBE11" oninput="setV('--amarelo',this.value)">
+  </div>
+  <div class="ep-row">
+    <div class="ep-lbl">Tamanho Headline</div>
+    <div class="ep-step">
+      <button onclick="adjHL(-2)">−</button>
+      <span id="hl-d">54px</span>
+      <button onclick="adjHL(2)">+</button>
+    </div>
+  </div>
+  <div class="ep-row">
+    <div class="ep-lbl">Tamanho Corpo</div>
+    <div class="ep-step">
+      <button onclick="adjBD(-1)">−</button>
+      <span id="bd-d">16px</span>
+      <button onclick="adjBD(1)">+</button>
+    </div>
+  </div>
+  <button class="ep-btn ed-btn" id="ed-btn" onclick="toggleEdit()">Ativar Edição de Texto</button>
+  <button class="ep-btn ex-btn" onclick="exportHTML()">⬇ Exportar HTML</button>
+</div>
+
+<script>
+// ══ CONFIG ══════════════════════════════
+const TOTAL = 8;
+let curSec = 0;
+let editOn = false, edOpen = false;
+let hlSz = 54, bdSz = 16;
+const R = document.documentElement;
+
+// ══ VNAV ════════════════════════════════
+const vNav = document.getElementById('vnav');
+for (let i = 0; i < TOTAL; i++) {
+  const d = document.createElement('div');
+  d.className = 'vdot' + (i === 0 ? ' active' : '');
+  d.onclick = () => scrollTo(i);
+  vNav.appendChild(d);
+}
+
+function scrollTo(idx) {
+  const sec = document.querySelectorAll('.sec')[idx];
+  if (sec) sec.scrollIntoView({ behavior: 'smooth' });
+}
+
+// ══ SCROLL TRACKING ════════════════════
+const app = document.getElementById('app');
+const secs = document.querySelectorAll('.sec');
+const dots = document.querySelectorAll('.vdot');
+const hint = document.getElementById('scroll-hint');
+
+app.addEventListener('scroll', () => {
+  const scrollTop = app.scrollTop;
+  const h = app.clientHeight;
+  const idx = Math.round(scrollTop / h);
+  const pct = scrollTop / (app.scrollHeight - h);
+
+  if (idx !== curSec) {
+    curSec = Math.max(0, Math.min(TOTAL - 1, idx));
+    dots.forEach((d, i) => d.classList.toggle('active', i === curSec));
+    document.getElementById('cur').textContent = String(curSec + 1).padStart(2, '0');
+  }
+
+  document.getElementById('prog').style.transform = `scaleX(${pct})`;
+  hint.style.opacity = scrollTop > 80 ? '0' : '0.45';
+}, { passive: true });
+
+// ══ INTERSECTION OBSERVER (ANIMATIONS) ══
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const el = entry.target;
+      const cls = el.dataset.anim || 'in';
+      el.classList.add(cls);
+      // trigger count-up
+      triggerCount(el);
+      // trigger bars
+      triggerBars(el);
+      observer.unobserve(el);
+    }
+  });
+}, { threshold: 0.15, root: app });
+
+document.querySelectorAll('.anim').forEach(el => {
+  // map class to data-anim
+  if (el.classList.contains('in-left')) el.dataset.anim = 'in-left';
+  else if (el.classList.contains('in-scale')) el.dataset.anim = 'in-scale';
+  else if (el.classList.contains('in-fade')) el.dataset.anim = 'in-fade';
+  else el.dataset.anim = 'in';
+  observer.observe(el);
+});
+
+// ══ COUNT-UP ════════════════════════════
+function triggerCount(root) {
+  const els = root.querySelectorAll ? root.querySelectorAll('[data-count]') : [];
+  // also check the element itself
+  const all = root.dataset && root.dataset.count ? [root, ...els] : [...els];
+  all.forEach(el => {
+    if (el._counted) return;
+    el._counted = true;
+    const target = +el.dataset.count;
+    const prefix = el.dataset.prefix || '';
+    const fmt = el.dataset.format || '';
+    const dur = 1600;
+    const t0 = performance.now();
+
+    function tick(now) {
+      const p = Math.min((now - t0) / dur, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      const v = Math.round(ease * target);
+      if (fmt === 'money') {
+        el.textContent = 'R$' + v.toLocaleString('pt-BR');
+      } else {
+        el.textContent = prefix + v.toLocaleString('pt-BR');
+      }
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+// Also trigger count on section elements themselves
+document.querySelectorAll('[data-count]').forEach(el => {
+  const sec = el.closest('.sec');
+  if (!sec) return;
+  const secObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        triggerCount(e.target);
+        secObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3, root: app });
+  secObs.observe(el);
+});
+
+// ══ BAR ANIMATIONS ══════════════════════
+function triggerBars(root) {
+  const bars = root.querySelectorAll ? root.querySelectorAll('.pr-bar') : [];
+  bars.forEach(bar => {
+    if (bar._animated) return;
+    bar._animated = true;
+    setTimeout(() => { bar.style.width = bar.style.getPropertyValue('--w') || '0%'; }, 100);
+  });
+}
+// Also obs for bars in sections
+document.querySelectorAll('#s5 .sec').forEach(sec => {
+  const sObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) triggerBars(e.target); });
+  }, { threshold: 0.2, root: app });
+  sObs.observe(sec);
+});
+// Directly observe s5
+const s5 = document.getElementById('s5');
+if (s5) {
+  const s5obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) triggerBars(e.target); });
+  }, { threshold: 0.1, root: app });
+  s5obs.observe(s5);
+}
+
+// ══ KEYBOARD NAV ════════════════════════
+document.addEventListener('keydown', e => {
+  if (['ArrowDown', 'ArrowRight', ' '].includes(e.key)) { e.preventDefault(); scrollTo(Math.min(curSec + 1, TOTAL - 1)); }
+  if (['ArrowUp', 'ArrowLeft'].includes(e.key)) { e.preventDefault(); scrollTo(Math.max(curSec - 1, 0)); }
+});
+
+// ══ FLASHLIGHT CARDS ════════════════════
+document.querySelectorAll('.card, .kpi-card, .insight-box').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+    card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+  });
+});
+
+// ══ TOUCH SWIPE ═════════════════════════
+let ty0 = 0;
+app.addEventListener('touchstart', e => { ty0 = e.touches[0].clientY; }, { passive: true });
+app.addEventListener('touchend', e => {
+  const dy = e.changedTouches[0].clientY - ty0;
+  if (Math.abs(dy) > 50) scrollTo(dy < 0 ? Math.min(curSec + 1, TOTAL - 1) : Math.max(curSec - 1, 0));
+}, { passive: true });
+
+// ══ EDITOR ══════════════════════════════
+function toggleEd() {
+  edOpen = !edOpen;
+  document.getElementById('editor').classList.toggle('open', edOpen);
+}
+function setV(p, v) { R.style.setProperty(p, v); }
+function adjHL(d) {
+  hlSz = Math.max(24, Math.min(120, hlSz + d));
+  R.style.setProperty('--hl', hlSz + 'px');
+  document.getElementById('hl-d').textContent = hlSz + 'px';
+}
+function adjBD(d) {
+  bdSz = Math.max(10, Math.min(32, bdSz + d));
+  R.style.setProperty('--bd', bdSz + 'px');
+  document.getElementById('bd-d').textContent = bdSz + 'px';
+}
+function toggleEdit() {
+  editOn = !editOn;
+  document.body.classList.toggle('edit-on', editOn);
+  const btn = document.getElementById('ed-btn');
+  btn.classList.toggle('on', editOn);
+  btn.textContent = editOn ? 'Desativar Edição' : 'Ativar Edição de Texto';
+  const sel = ['.tag','.h1','.h2','.step-title','.step-desc','.step-val',
+    '.ib-label','.ib-text','.card-title','.card-body','.kpi-label',
+    '.kpi-big','.kpi-sub','.pc-big','.pc-label','.pa-item','.ri-label',
+    '.ri-val','.concl-title','.concl-body','.cr-name','.cr-product','.cr-val',
+    '.pr-name','.eyebrow','.tagline','.meta-chip'];
+  sel.forEach(s => document.querySelectorAll(s).forEach(el => {
+    el.contentEditable = editOn ? 'true' : 'false';
+  }));
+}
+function exportHTML() {
+  if (editOn) toggleEdit();
+  const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  const blob = new Blob([html], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'analise-upsell-premonicoes-mr.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+</script>
+</body>
+</html>
